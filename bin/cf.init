@@ -58,7 +58,9 @@ args = parser.parse_args()
 
 def print_type_list():
     print 'available template:'
-    for n in list_template:
+    a = list_template.keys()
+    a.sort()
+    for n in a:
         print '    %s' % n
 
 if args.islist:
@@ -80,7 +82,12 @@ if file_name == '':
 
 import os
 
-local_template_path=os.path.join(os.getenv('HOME'), '.cfinit')
+if os.sys.platform == 'win32':
+    home_path = os.getenv('HOMEDRIVE') + os.getenv('HOMEPATH')
+else:
+    home_path = os.getenv('HOME')
+
+local_template_path=os.path.join(home_path, '.cfinit')
 
 if not os.path.exists(local_template_path):
     os.makedirs(local_template_path)
@@ -97,10 +104,14 @@ if os.path.exists(local_template_filename):
             f2.write(f.read());
 else:
     # remote
-    import requests
+    try:
+        import requests
+    except ImportError:
+        print 'please run \'pip install requests\''
+        exit(3)
     template_path = 'https://raw.githubusercontent.com/xiaogaozi/princess-alist/master/home/xiaogaozi/.templates/%s' % file_type_name
     print 'get template for [%s]:[%s] from remote' % (file_name, args.t)
-    print ' %s' % file_type_name
+    
     try:
         r = requests.get(template_path, stream=True)
         if r.status_code == 200:

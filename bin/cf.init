@@ -27,23 +27,34 @@ list_template = {
 import sys
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("name", help="init file's name", type=str);
-parser.add_argument("-t", "--type", help="""
-init file's type can be
-  CMake
-""" , type=str)
+parser = argparse.ArgumentParser(description='Create file by template')
+parser.add_argument("name", nargs='?', default='',
+                    help="init file's name")
+parser.add_argument("-t", "--type", nargs='?', default='', dest='t',
+                    help="init file's type")
+parser.add_argument("-l", "--list", nargs='?', default=False, const=True, dest="islist",
+                    help="list all file's type")                    
 args = parser.parse_args()
+
+def print_type_list():
+    print 'available template:'
+    for n in list_template:
+        print '    %s' % n
+
+if args.islist:
+    print_type_list()
+    exit()
 
 file_name = args.name
 file_type_name = list_template.get(args.t, '')
 
 if file_type_name == '':
     print 'unknown template [%s]' % args.t
-    print 'available template:'
-    for n in list_template:
-        print '    %s' % n
-    exit()
+    print_type_list()
+    exit(2)
+
+if file_name == '':
+    file_name = list_template[args.t].replace('.tpl', '')
 
 import os
 
@@ -57,14 +68,14 @@ local_template_filename = os.path.join(local_template_path, file_type_name)
 # get
 
 if os.path.exists(local_template_filename):
-    print 'get emplate for [%s] from local' % args.t
+    print 'get emplate for [%s]:[%s] from local' % (file_name, args.t)
     with open(local_template_filename, 'rb') as f:    
         with open(file_name, 'wb') as f2:
             f2.write(f.read());
 else:
     import requests
     template_path = 'https://raw.githubusercontent.com/xiaogaozi/princess-alist/master/home/xiaogaozi/.templates/%s' % file_type_name
-    print 'get template for [%s] from remote' % args.t
+    print 'get template for [%s]:[%s] from remote' % (file_name, args.t)
     print ' %s' % file_type_name
     try:
         r = requests.get(template_path, stream=True)

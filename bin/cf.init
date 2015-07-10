@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+
+list_template = {
+ 'cmake' : 'CMakeLists.txt.tpl',
+ 'default' : 'DEFAULT.tpl',
+ 'makefile' : 'Makefile.tpl',    
+ 'readme' : 'README.tpl',
+ 'c' : 'TEMPLATE.c.tpl',    
+ 'cls' : 'TEMPLATE.cls.tpl',    
+ 'cpp' : 'TEMPLATE.cpp.tpl',    
+ 'el' : 'TEMPLATE.el.tpl',    
+ 'go' : 'TEMPLATE.go.tpl',    
+ 'gyp' : 'TEMPLATE.gyp.tpl',    
+ 'h' : 'TEMPLATE.h.tpl',    
+ 'html' : 'TEMPLATE.html.tpl',    
+ 'java' : 'TEMPLATE.java.tpl',    
+ 'js' : 'TEMPLATE.js.tpl',    
+ 'pp' : 'TEMPLATE.pp.tpl',    
+ 'proto' : 'TEMPLATE.proto.tpl',    
+ 'py' : 'TEMPLATE.py.tpl',    
+ 'rst' : 'TEMPLATE.rst.tpl',    
+ 'sh' : 'TEMPLATE.sh.tpl',    
+ 'sty' : 'TEMPLATE.sty.tpl',    
+ 'tex' : 'TEMPLATE.tex.tpl', 
+}
+
+import sys
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("name", help="init file's name", type=str);
+parser.add_argument("-t", "--type", help="""
+init file's type can be
+  CMake
+""" , type=str)
+args = parser.parse_args()
+
+file_name = args.name
+file_type_name = list_template.get(args.t, '')
+
+if file_type_name == '':
+    print 'unknown template [%s]' % args.t
+    print 'available template:'
+    for n in list_template:
+        print '    %s' % n
+    exit()
+
+import os
+
+local_template_path=os.path.join(os.getenv('HOME'), '.cfinit')
+
+if not os.path.exists(local_template_path):
+    os.makedirs(local_template_path)
+
+local_template_filename = os.path.join(local_template_path, file_type_name)
+
+# get
+
+if os.path.exists(local_template_filename):
+    print 'get emplate for [%s] from local' % args.t
+    with open(local_template_filename, 'rb') as f:    
+        with open(file_name, 'wb') as f2:
+            f2.write(f.read());
+else:
+    import requests
+    template_path = 'https://raw.githubusercontent.com/xiaogaozi/princess-alist/master/home/xiaogaozi/.templates/%s' % file_type_name
+    print 'get template for [%s] from remote' % args.t
+    print ' %s' % file_type_name
+    try:
+        r = requests.get(template_path, stream=True)
+        if r.status_code == 200:
+            with open(local_template_filename, 'wb') as f:
+                with open(file_name, 'wb') as f2:
+                    for chunk in r.iter_content(1024):
+                        f.write(chunk)
+                        f2.write(chunk)
+        else:
+            print 'can\'t find template for [%]' % file_type
+    except:
+        print sys.exc_info()
